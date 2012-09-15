@@ -12,6 +12,13 @@ frequent cronjob or anything asshatish like that.
 
 Dependencies:
 
-  pip install requests
-  pip install beautifulsoup4
-  pip install jinja2
+    pip install requests beautifulsoup4 jinja2
+
+To run:
+
+    python ludumscrape.py
+
+Results are cached in `results.json`. If this file exists, it is read
+instead of going back and scraping web pages again. This allows you to
+save the scraped info and analyse or reformat it in different ways 
+(eg, via the Jinja2 template output included).
