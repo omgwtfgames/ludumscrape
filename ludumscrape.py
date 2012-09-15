@@ -38,7 +38,7 @@
 import sys, time, json, re
 import requests
 from bs4 import BeautifulSoup
-sleeptime = 0.5
+sleeptime = 2.0
 start, end = 0, 1400
 #start, end = 72, 96
 base_url = 'http://www.ludumdare.com/compo/ludum-dare-24/'
