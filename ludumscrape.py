@@ -35,88 +35,122 @@
 ################################################################################
 
 
-import sys, time, json, re
+import sys, signal, time, json, re, random
 import requests
 from bs4 import BeautifulSoup
-sleeptime = 2.0
-start, end = 0, 1400
-#start, end = 72, 96
-base_url = 'http://www.ludumdare.com/compo/ludum-dare-24/'
+sleeptime = (0.5, 10) # min/max sleep between requests
+jamtype = "" # "compo" for the 48 compo, "open" for the jam
+searchquery = "" # for testing. normally this should and empty string
+#start, end = 0, 1608 # 2328
+#start, end = 0, 736
+start, end = 0, 24
+base_url = 'http://www.ludumdare.com/compo/ludum-dare-26/'
+
+_shutdown = False
 
 try:
   fh = open('results.json', 'r')
   bigdict = json.loads(fh.read())
   fh.close()
+  sys.stderr.write("Loaded existing results.json\n")
 except:
+  sys.stderr.write("results.json not found (or parsing error).\nStarting from scratch.\n")
   bigdict = {'entries':[]}
-  # loop
-  for num in range(start, end, 24):
-    url = 'http://www.ludumdare.com/compo/ludum-dare-24/?action=preview&q=&etype=&start=%i' % (num)
-    page = BeautifulSoup(requests.get(url).text)
-    time.sleep(sleeptime)
-    table = page.find(class_='preview')
-    links = table.find_all('a')
-    for l in links:
-      link = base_url + l.get('href')
-      gamepage = BeautifulSoup(requests.get(link).text)
-      time.sleep(sleeptime)
-      linkpara = gamepage.find(class_='links')
-      dllinks = linkpara.find_all('a')
-      title = gamepage.find(id='compo2').find('h3').text
-      try:
-        sys.stderr.write(u"## %s ##\n" % (title))
-      except:
-        sys.stderr.write(u"## %s ##\n" % (link))
-      entry = {}
-      entry['url'] = link
-      entry['title'] = title
-      entry['download_urls'] = {}
-      entry['screenshots'] = []
-      for screenie in gamepage.find(id='compo2').find('table').find_all('a'):
-        entry['screenshots'].append(screenie.get('href'))
-      for dl in dllinks:
-        platform = dl.text
-        dlurl = dl.get('href')
-        sys.stderr.write(platform + ": " + dlurl + "\n")
-        entry['download_urls'][platform] = dlurl
-      bigdict['entries'].append(entry)
-      sys.stderr.write("/n")
 
-  fh = open('results.json', 'w')
-  fh.write(json.dumps(bigdict))
-  fh.close()
+# this catches Ctrl-C and finished the last entry before writing the cache file
+def signal_handler(signal, frame):
+  sys.stderr.write('Finishing entry, writing results.json and exiting ...\n')
+  global _shutdown
+  _shutdown = True
+
+signal.signal(signal.SIGINT, signal_handler)
+
+# loop
+fh = open('results.json', 'w')
+for num in range(start, end, 24):
+  url = base_url + '?action=preview&q=%s&etype=%s&start=%i' % (searchquery, jamtype, num)
+  page = BeautifulSoup(requests.get(url).text)
+  time.sleep(random.random()*sleeptime[1] + sleeptime[0])
+  table = page.find(class_='preview')
+  links = table.find_all('a')
+  for l in links:
+    link = base_url + l.get('href')
+
+    # skip any entries we've already saved in results.json previously
+    skiplink = False
+    for saved in bigdict['entries']:
+      if ('url' in saved) and (link == saved['url']):
+        print "###! Skipping, already cached: %s\n" % (link)
+        skiplink = True
+        break
+    if skiplink:
+      continue
+
+    gamepage = BeautifulSoup(requests.get(link).text)
+    time.sleep(random.random()*sleeptime[1] + sleeptime[0])
+    linkpara = gamepage.find(class_='links')
+    dllinks = linkpara.find_all('a')
+    title = gamepage.find(id='compo2').find('h3').text
+    try:
+      print u"## %s ##" % (title)
+    except:
+      print u"## %s ##" % (link)
+    entry = {}
+    entry['url'] = link
+    entry['title'] = title
+    entry['download_urls'] = {}
+    entry['screenshots'] = []
+    for screenie in gamepage.find(id='compo2').find('table').find_all('a'):
+      entry['screenshots'].append(screenie.get('href'))
+    for dl in dllinks:
+      platform = dl.text
+      dlurl = dl.get('href')
+      print platform + ": " + dlurl
+      entry['download_urls'][platform] = dlurl
+    bigdict['entries'].append(entry)
+    print
+
+    if _shutdown:
+      break
+  if _shutdown:
+    break
+
+fh.write(json.dumps(bigdict))
+fh.close()
 
 
-#sys.stderr.write("\n")
-#sys.stderr.write( "#####################\n")
-#sys.stderr.write( "## Android entries ##\n")
-#sys.stderr.write( "#####################\n")
-#sys.stderr.write("\n")
+#print
+#print "#####################"
+#print "## Android entries ##"
+#print "#####################"
+#print
 android_entries = {'entries':[]}
 for entry in bigdict['entries']:
   title = entry['title']
   for platform in entry['download_urls']:
     if re.search("Android", platform, flags=re.IGNORECASE):
       try:
-        #sys.stderr.write( u"## %s ##\n" % (title))
+        #print u"## %s ##" % (title)
         pass
       except:
-        #sys.stderr.write( u"## %s ##\n" % (link))
+        #print u"## %s ##" % (link)
         pass
-      #sys.stderr.write( platform + ": " + entry['download_urls'][platform]+"\n")
-      #sys.stderr.write( "Screenshots: \n")
+      #print platform + ": " + entry['download_urls'][platform]
+      #print "Screenshots: "
       for s in entry['screenshots']:
-        #sys.stderr.write( s+"\n")
+        #print s
         pass
-      #sys.stderr.write("\n")
+      #print
       entry['id'] = entry['url'].split("=")[-1:]
       android_entries['entries'].append(entry)
 
 
 from jinja2 import Template
-#template = Template(open("template.jinja2", 'r').read())
-template = Template(open("template_lite.jinja2", 'r').read())
-print template.render(android_entries)
+template = Template(open("template.jinja2", 'r').read())
+fh = open('ludumdroid.html', 'w')
+fh.write(template.render(android_entries))
+fh.close()
+#print template.render(android_entries)
 
 
 

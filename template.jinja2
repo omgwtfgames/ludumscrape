@@ -8,20 +8,23 @@ ul li { display: inline; }
 <script src="js/jquery-1.7.2.min.js"></script>
 <script src="js/lightbox.js"></script>
 <link href="css/lightbox.css" rel="stylesheet" />
+<link href="css/screen.css" rel="stylesheet" />
 </head>
 <body>
 <h1>Ludum Droid</h1>
-
+<p>
   {% for entry in entries %}
     <h3><a href="{{entry.url}}">{{entry.title}}</a></h3>
+    Platforms 
     {% for dl in entry.download_urls %}
-      Platform: <a href={{entry.download_urls[dl]}}>{{dl}}</a>
+      | <a href={{entry.download_urls[dl]}}>{{dl}}</a>
     {% endfor %}
     <ul>
     {% for screenie in entry.screenshots %}
       <li><a href="{{screenie}}" rel="lightbox[{{entry.id}}]"><img src="{{screenie}}" width=256 /></a></li>
     {% endfor %}
     </ul>
+    <hr>
   {% endfor %}
 
 </body>
