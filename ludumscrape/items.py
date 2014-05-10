@@ -9,6 +9,7 @@ class GameItem(Item):
     downloads = Field()
     #screenshots = Field()
     comments = Field()
+    ratings = Field()
     image_urls = Field()
     images = Field()
 

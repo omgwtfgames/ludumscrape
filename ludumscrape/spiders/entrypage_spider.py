@@ -42,6 +42,20 @@ class LudumdareSpider(CrawlSpider):
         entry['downloads'] = dict(zip(download_platforms, download_urls))       
         entry['image_urls'] = sel.xpath(base_xpath + "/table//*/img/@src").extract()
         
+        #rankings = sel.xpath(base_xpath + "/table[2]/tr/td[1]/text()").extract()
+        rankings = sel.xpath(base_xpath + "/table[2]/tr/td[1]/text() | " + 
+                             base_xpath + "/table[2]/tr/td[1]/img/@src").extract()
+        for i, r in enumerate(rankings):
+            r = r.replace("#", "")
+            medals = {"gold":1, "silver":2, "bronze":3}
+            for medal, rank in medals.items():
+                if medal in r: 
+                    r = rank
+                    break
+            rankings[i] = int(r)
+        sections = sel.xpath(base_xpath + "/table[2]/tr/td[2]/text()").extract()
+        scores = sel.xpath(base_xpath + "/table[2]/tr/td[3]/text()").extract()
+        entry['ratings'] = dict(zip(sections, zip(scores, rankings)))
         
         if (int(self.event_number) < 18):
             comment_author_names = sel.xpath(base_xpath + "/h4/text()").extract()
