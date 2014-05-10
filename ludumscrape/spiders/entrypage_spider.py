@@ -15,7 +15,7 @@ class LudumdareSpider(CrawlSpider):
         self.start_urls = ['http://www.ludumdare.com/compo/ludum-dare-%s/?action=preview&etype=' % event_number]
         self.rules = [Rule(SgmlLinkExtractor(allow=['ludum-dare-%s\/\?action=preview\&q=\&etype=\&start=\d+' 
                                                     % event_number]), follow=True),
-                      Rule(SgmlLinkExtractor(allow=['ludum-dare-%s\/\?action=preview\&uid=\d+']), 
+                      Rule(SgmlLinkExtractor(allow=['ludum-dare-%s\/\?action=preview\&uid=\d+' % event_number]), 
                                                     callback='parse_entry')]
         # we need to call this last so rules get compiled correctly 
         # (alternative is to call self._compile_rules() )
