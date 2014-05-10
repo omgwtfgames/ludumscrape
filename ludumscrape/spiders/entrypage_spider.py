@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import string
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import Selector
@@ -21,26 +21,42 @@ class LudumdareSpider(CrawlSpider):
         # (alternative is to call self._compile_rules() )
         super(LudumdareSpider, self).__init__(*args, **kwargs) 
     
-    """
-    def parse_preview(self, response):
-        sel = Selector(response)
-        preview_page_urls = sel.xpath("//div[@class='entry']/div[@id='compo2']/p[4]/a/@href").extract()
-        for url in preview_page_urls:
-            yield Request(url)
-    """
-
     def parse_entry(self, response):
+        base_xpath = "//div[@class='entry']/div[@id='compo2']"
         sel = Selector(response)
         entry = GameItem()
         entry['url'] = response.url
-        title_author = sel.xpath("//div[@class='entry']/div[@id='compo2']/h3/text()").extract()[0]
+        title_author = sel.xpath(base_xpath + "/h3/text()").extract()[0]
         entry['title'] = title_author.split("-")[0].strip()
         entry['author'] = title_author.split("-")[1].strip()
-        entry['entry_type'] = sel.xpath("//div[@class='entry']/div[@id='compo2']/h3/i/text()").extract()
-        entry['description'] = sel.xpath("//div[@class='entry']/div[@id='compo2']/p[@class='links']/following::p[1]/text()").extract()
+        entry['entry_type'] = sel.xpath(base_xpath + "/h3/i/text()").extract()
+        description = sel.xpath(base_xpath + "/p[@class='links']/following::p[1]/text()").extract()
+        description = self.strip_whitespace(description)
+        description = string.join(description, '\n')
+        entry['description'] = description
         # for link text to zip together with urls: 
-        download_platforms = sel.xpath("//div[@class='entry']/div[@id='compo2']/p[@class='links']/a[@href]/text()").extract()
-        download_urls = sel.xpath("//div[@class='entry']/div[@id='compo2']/p[@class='links']/a/@href").extract()
+        download_platforms = sel.xpath(base_xpath + "/p[@class='links']/a[@href]/text()").extract()
+        download_urls = sel.xpath(base_xpath + "/p[@class='links']/a/@href").extract()
 	entry['downloads'] = dict(zip(download_platforms, download_urls))       
-        entry['image_urls'] = sel.xpath("//div[@class='entry']/div[@id='compo2']/table//*/img/@src").extract()
-        return entry
+        entry['image_urls'] = sel.xpath(base_xpath + "/table//*/img/@src").extract()
+        
+        comment_author_names = sel.xpath(base_xpath + "/div[@class='comment']/div/strong/a[@href]/text()").extract()
+
+        comment_author_uids = sel.xpath(base_xpath + "/div[@class='comment']/div/strong/a/@href").extract()
+        for i, uid in enumerate(comment_author_uids):
+            comment_author_uids[i] = uid.split("=")[-1:][0]
+
+        comment_dates = sel.xpath(base_xpath + "/div[@class='comment']/div/small/text()").extract()
+        comment_texts = sel.xpath(base_xpath + "/div[@class='comment']/p/text()").extract(
+)
+        comment_texts = self.strip_whitespace(comment_texts)
+
+	entry['comments'] = zip(comment_dates, comment_author_names, comment_author_uids, comment_texts)
+
+	return entry
+
+    def strip_whitespace(self, str_list):
+        for i, s in enumerate(str_list):
+            str_list[i] = s.strip()
+        return str_list
+

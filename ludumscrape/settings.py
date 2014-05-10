@@ -17,4 +17,4 @@ DOWNLOAD_DELAY = 1
 #USER_AGENT = 'ludumscrape (+http://www.yourdomain.com)'
 
 ITEM_PIPELINES = {'scrapy.contrib.pipeline.images.ImagesPipeline': 1}
-IMAGES_STORE = "images"
+IMAGES_STORE = "results/images"
