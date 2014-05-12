@@ -1,1 +1,4 @@
 scrapy
+textblob
+nltk
+simplejson

@@ -1,0 +1,9 @@
+
+# Calculate comment word frequencies for a particular event (LD26)
+# Output in a JSON format suitable for ingestion by d3.layout.cloud
+python comment_wordfreq_d3json.py ../../results/results_ld26.json >data/ld26_comment_wordfreq.json
+
+# Filter the word frequencies to remove short words, take only the top 100
+python wordfreq_filter_d3json.py ld26_comment_wordfreq.json >data/ld26_comment_wordfreq_filtered.json
+
+# Make sure index.html references the right data file.

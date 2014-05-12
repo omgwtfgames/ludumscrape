@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+<script src="js/d3/d3.js"></script>
+<script src="js/d3.layout.cloud.js"></script>
+<script src="data/ld15_comment_wordfreq_filtered.json"></script>
+<script>
+  var fill = d3.scale.category20();
+  //var fill = d3.scale.linear()
+  //          .domain([0,10,20,50,100,200,500,1000,2000])
+  //          .range(["#aaa", "#999", "#888", "#777", "#666", "#555", "#444", "#333", "#222"]);
+
+  var plotsize_x = 800;
+  var plotsize_y = 800;
+  //var fontSize = d3.scale.log().range([10, 100]);
+  // word_freqs need to be sorted descending to do this
+  var maxFontSize = 180;
+  var fontScaleFactor = maxFontSize/word_freqs[0].size;
+  d3.layout.cloud().size([plotsize_x, plotsize_y])
+      .words(word_freqs)
+      .padding(5)
+      .rotate(function() { return ~~(Math.random() * 2) * 90; })
+      .font("Impact")
+      .fontSize(function(d) { return d.size * fontScaleFactor; })
+      .on("end", draw)
+      .start();
+
+  function draw(words) {
+    d3.select("body").append("svg")
+        .attr("width", plotsize_x)
+        .attr("height", plotsize_y)
+      .append("g")
+        .attr("transform", "translate("+plotsize_x/2+","+plotsize_y/2+")")
+      .selectAll("text")
+        .data(words)
+      .enter().append("text")
+        .style("font-size", function(d) { return d.size + "px"; })
+        .style("font-family", "Impact")
+        .style("fill", function(d, i) { return fill(i); })
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) {
+          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .text(function(d) { return d.text; });
+  }
+</script>

@@ -1,0 +1,46 @@
+import sys
+import textblob
+from textblob import TextBlob
+
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
+
+def word_freqs(blob):
+    from collections import defaultdict
+    '''Dictionary of word frequencies in this text.
+       We can't use the equivalent function in TextBlob since it's tokenizer can't be overridden.
+    '''
+    counts = defaultdict(int)
+    stripped_words = [textblob.utils.lowerstrip(w) for w in blob.tokens]
+    for w in stripped_words:
+        counts[w] += 1
+    return counts
+
+fn = sys.argv[1]
+
+data = []
+with open(fn) as f:
+    for jsonline in f:
+        data.append(json.loads(jsonline))
+
+all_comments = ""
+for entry in data:
+    for date, name, uid, comment in entry["comments"]:
+        all_comments += comment + "\n\t\n"
+
+from nltk.tokenize import RegexpTokenizer
+# this tokenizer won't split contractions ("Can't" stays as "Can't")
+tokenizer = RegexpTokenizer("[\w']+")
+
+all_comments = TextBlob(all_comments, tokenizer=tokenizer)
+word_counts = []
+for word, freq in word_freqs(all_comments).iteritems():  # all_comments.word_counts.iteritems():
+    word_counts.append({"text": word, "size": freq})
+
+# sort by frequency
+word_counts.sort(key=lambda x: x["size"], reverse=True)
+
+print json.dumps(word_counts)
