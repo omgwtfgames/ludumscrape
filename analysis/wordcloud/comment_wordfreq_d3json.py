@@ -26,10 +26,13 @@ with open(fn) as f:
     for jsonline in f:
         data.append(json.loads(jsonline))
 
-all_comments = ""
-for entry in data:
-    for date, name, uid, comment in entry["comments"]:
-        all_comments += comment + "\n\t\n"
+# here's how we'd get all the fields for a comment
+# for entry in data:
+#    for date, name, uid, comment in entry["comments"]:
+#        pass
+
+# concatenate all comments into one long string
+all_comments = "\n\t\n".join([comment[3] for comment in [entry["comments"][0] for entry in data]])
 
 from nltk.tokenize import RegexpTokenizer
 # this tokenizer won't split contractions ("Can't" stays as "Can't")
