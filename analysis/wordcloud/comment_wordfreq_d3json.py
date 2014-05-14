@@ -32,7 +32,12 @@ with open(fn) as f:
 #        pass
 
 # concatenate all comments into one long string
-all_comments = "\n\t\n".join([comment[3] for comment in [entry["comments"][0] for entry in data]])
+comment_list = []
+for entry in data:
+    for comment in entry["comments"]:
+        comment_list.append(comment[3])
+
+all_comments = "\n\t\n".join(comment_list)
 
 from nltk.tokenize import RegexpTokenizer
 # this tokenizer won't split contractions ("Can't" stays as "Can't")
