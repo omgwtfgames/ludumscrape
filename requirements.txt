@@ -1,4 +1,6 @@
 scrapy
 textblob
 nltk
+pattern
 simplejson
+docopt==0.6.1

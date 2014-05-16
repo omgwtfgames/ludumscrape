@@ -1,8 +1,8 @@
 #!/bin/sh
 EVENT_NUMBER=$1
-if [ ! -z "$SCRAPY_BIN" ]; then
+#if [ ! -z "$SCRAPY_BIN" ]; then
   SCRAPY_BIN="scrapy"
-fi
+#fi
 mkdir -p .job
 JOBDIR=.job/$1
 mkdir -p $JOBDIR

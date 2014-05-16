@@ -46,7 +46,11 @@ tokenizer = RegexpTokenizer("[\w']+")
 all_comments = TextBlob(all_comments, tokenizer=tokenizer)
 word_counts = []
 for word, freq in word_freqs(all_comments).iteritems():  # all_comments.word_counts.iteritems():
-    word_counts.append({"text": word, "size": freq})
+    try:
+        pos_tag = TextBlob(word).pos_tags[0][1]
+    except IndexError:
+        pos_tag = ""
+    word_counts.append({"text": word, "size": freq, "pos_tag": pos_tag})
 
 # sort by frequency
 word_counts.sort(key=lambda x: x["size"], reverse=True)
