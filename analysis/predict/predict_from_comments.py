@@ -11,12 +11,12 @@ Options:
   -h --help                     Show this message
   --version                     Show the version
   --classifier=<type>           Set the classifier type. Valid types are:
+                                KNN (k-nearest neighbors),
                                 NB (Naive Bayes),
                                 SVM (Support Vector Machine)
                                 SVR (Support Vector Regression)
-                                KNN (k-nearest neighbors)
                                 SLP (Single Layer Averaged Perceptron)
-                                [default: SVM]
+                                [default: KNN]
   --svm-kernel=<type>           Set the SVM kernel used. Valid types are:
                                 LINEAR, POLYNOMIAL and RADIAL [default: LINEAR]
   -n <n>, --nfold=<n>           N-fold cross-validation [default: 5]
@@ -24,11 +24,12 @@ Options:
                                 If zero, include all features
                                 (all included words) [default: 200]
   --pos-tags=<tags>             Part-of-speech tag prefixes to
-                                include, comma separated [default: J,R]
+                                include, comma separated J,R,N,V
+                                [default: J,R]
   --predict=<feature>           Feature to predict. rating, rating_class,
                                 rank_class, percentile_rank,
                                 percentile_rank_class. [default: rating_class]
-  --rating-category=<category>  Overall, Graphics, Theme,
+  --rating-category=<category>  Overall, Graphics, Theme, Humor,
                                 Audio, Innovation [default: Overall]
 
 Example:
