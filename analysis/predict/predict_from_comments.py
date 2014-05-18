@@ -10,6 +10,8 @@ Arguments:
 Options:
   -h --help                     Show this message
   --version                     Show the version
+  -o, --output=<filename>       Trained predictor output file.
+                                [default: trained.pickle.gz]
   --classifier=<type>           Set the classifier type. Valid types are:
                                 KNN (k-nearest neighbors),
                                 NB (Naive Bayes),
@@ -57,6 +59,8 @@ except ImportError:
 
 
 options = docopt(__doc__, argv=None, help=True, version=sys.argv[0] + " " + __version__)
+
+output_filename = options["--output"]
 
 #classifier_type = "NB"
 classifier_type = options["--classifier"]
@@ -206,8 +210,8 @@ print
 print "Confusion matrx:"
 print classifier.confusion_matrix(vectors).table
 
-# TODO: save and load previously trained models
-# classifier.save("trained.pickle.gz")
+if options["train"]:
+    classifier.save(output_filename)
 # classifier.load("trained.pickle.gz")
 
 print "\n\n----"
