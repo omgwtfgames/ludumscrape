@@ -3,6 +3,7 @@
 
 Usage:
   predict_from_comments.py train [options] INPUTFILES ...
+  predict_from_comments.py predict [options] INPUTFILES ...
 
 Arguments:
   INPUTFILE                     Path to a ludumscrape JSON data file
@@ -10,7 +11,7 @@ Arguments:
 Options:
   -h --help                     Show this message
   --version                     Show the version
-  -o, --output=<filename>       Trained predictor output file.
+  -t, --trained=<filename>      Trained predictor input or output file.
                                 [default: trained.pickle.gz]
   --classifier=<type>           Set the classifier type. Valid types are:
                                 KNN (k-nearest neighbors),
@@ -40,16 +41,25 @@ Example:
                                    --rating-category=Graphics \
                                    --predict=rating_class \
                                    ../../results/results_ld*.json
+
+  ./predict_from_comments.py predict --trained=trained.pickle.gz  \
+                                     --pos-tags=J,R \
+                                     --rating-category=Graphics \
+                                     --predict=rating_class \
+                                     ../../results/results_ld30.json
 """
 __version__ = "0.1"
 
 import sys
+
 from docopt import docopt
-import fileinput
+
 #from textblob.taggers import NLTKTagger
 from textblob import TextBlob
 import pattern
-from pattern.vector import Document, Model, NB, SVM, kfoldcv, count
+import pattern.vector
+from pattern.vector import Document, Model, Classifier, \
+                           NB, SVM, KNN, SLP, kfoldcv, count
 from pattern.text.en import parsetree
 
 try:
@@ -57,10 +67,9 @@ try:
 except ImportError:
     import simplejson as json
 
-
 options = docopt(__doc__, argv=None, help=True, version=sys.argv[0] + " " + __version__)
 
-output_filename = options["--output"]
+trained_filename = options["--trained"]
 
 #classifier_type = "NB"
 classifier_type = options["--classifier"]
@@ -103,9 +112,9 @@ predict = options["--predict"]
 #predict = "percentile_rank_class"
 
 # Cutoffs for "_class" binary classification
-rating_class_cutoff = 4             # 4 means "Scored 4 or more ?"
-rank_class_cutoff = 10              # 10 means "In top 10 ?"
-percentile_rank_class_cutoff = 10   # 10 means "In top 10th percentile ?"
+rating_class_cutoff = 4  # 4 means "Scored 4 or more ?"
+rank_class_cutoff = 10  # 10 means "In top 10 ?"
+percentile_rank_class_cutoff = 10  # 10 means "In top 10th percentile ?"
 
 #nltk_tagger = NLTKTagger()
 
@@ -114,24 +123,27 @@ print "Running with options:"
 print options
 print
 
+
 def discard_words_without_tag_of_interest(text, tag_prefixes=tag_prefixes):
     v = parsetree(text, lemmata=True)[0]
     v = [w.lemma for w in v if w.tag.startswith(tag_prefixes)]
     return v
 
+
 def discard_words_without_tag_of_interest_textblob(text, tag_prefixes=tag_prefixes):
     v = []
-    blob = TextBlob(text) #, pos_tagger=nltk_tagger)
+    blob = TextBlob(text)  #, pos_tagger=nltk_tagger)
     for word, tag in blob.pos_tags:
         if tag.startswith(tag_prefixes):
             v.append(word)
     return v
 
+
 data = []
 for fn in options["INPUTFILES"]:
-  with open(fn) as f:
-      for jsonline in f:
-          data.append(json.loads(jsonline))
+    with open(fn) as f:
+        for jsonline in f:
+            data.append(json.loads(jsonline))
 
 worst_ranking = 0
 for entry in data:
@@ -142,6 +154,8 @@ for entry in data:
 
 vectors = []
 for entry in data:
+    url = entry['url']
+    author = entry['author']
     # those who didn't rate anything (0% Coolness) get no Overall rating
     if rating_category not in entry['ratings']:
         #sys.stderr.write("Skipping: " + entry['url'] + "\n")
@@ -179,45 +193,49 @@ for entry in data:
     #print all_entry_comment_text_filtered
     # document = all comments for one game entry (seems to work better)
     vectors.append(Document(all_entry_comment_text_filtered,
-                             type=output_vector,
-                             stopwords=True))
-
+                            name="%s\t%s" % (author, url),
+                            type=output_vector,
+                            stopwords=True))
 
 if use_feature_selection:
     vectors = Model(documents=vectors, weight=pattern.vector.TFIDF)
     vectors = vectors.filter(features=vectors.feature_selection(top=select_top_n_features))
     #print vectors.vectors
 
-if classifier_type == "NB":
-    classifier = NB(train=vectors)
-elif classifier_type == "SVM":
-    classifier = SVM(train=vectors,
-                     type=svm_type,
-                     kernel=svm_kernel)
-else:
-    classifier = NB(train=vectors)
-
-print "Classes: " + repr(classifier.classes)
-
-#performance = kfoldcv(NB, vectors, folds=n_fold)
-performance = kfoldcv(type(classifier), vectors, folds=n_fold)
-print "Accuracy: %.3f\n" \
-      "Precision: %.3f\n" \
-      "Recall: %.3f\n" \
-      "F1: %.3f\n" \
-      "Stddev:%.3f" % performance
-print
-print "Confusion matrx:"
-print classifier.confusion_matrix(vectors).table
-
 if options["train"]:
-    classifier.save(output_filename)
-# classifier.load("trained.pickle.gz")
+    if classifier_type == "SVM":
+        classifier = SVM(train=vectors,
+                         type=svm_type,
+                         kernel=svm_kernel)
+    else:
+        classifier = getattr(pattern.vector, classifier_type)(train=vectors)
 
+    print "Classes: " + repr(classifier.classes)
+
+    #performance = kfoldcv(NB, vectors, folds=n_fold)
+    performance = kfoldcv(type(classifier), vectors, folds=n_fold)
+    print "Accuracy: %.3f\n" \
+          "Precision: %.3f\n" \
+          "Recall: %.3f\n" \
+          "F1: %.3f\n" \
+          "Stddev:%.3f" % performance
+    print
+    print "Confusion matrx:"
+    print classifier.confusion_matrix(vectors).table
+
+    classifier.save(trained_filename)
+elif options["predict"]:
+    classifier = Classifier.load(trained_filename)
+    for v in vectors:
+        print "%s\t%s" % (v.name, repr(classifier.classify(v)))
+
+"""
 print "\n\n----"
 from example_game_comments import example_game_comments
+
 example_game_comments_filtered = " ".join(discard_words_without_tag_of_interest_textblob(example_game_comments))
 print "Example comment words: "
 print example_game_comments_filtered
 print
-print "Example prediction: " + `classifier.classify(Document(example_game_comments_filtered))`
+print "Example prediction: " + repr(classifier.classify(Document(example_game_comments_filtered)))
+"""
