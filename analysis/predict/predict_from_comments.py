@@ -218,7 +218,7 @@ if options["train"]:
 elif options["predict"]:
     classifier = Classifier.load(trained_filename)
     for v in vectors:
-        print("%s\t%s" % (v.name, repr(classifier.classify(v))))
+        print("%s\t%s" % (v.name.encode('utf-8'), repr(classifier.classify(v))))
 
 """
 print("\n\n----")
