@@ -5,6 +5,7 @@ from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import Selector
 
 from ludumscrape.items import GameItem
+import ludumscrape
 
 class LudumdareSpider(CrawlSpider):
 
@@ -13,6 +14,10 @@ class LudumdareSpider(CrawlSpider):
     event_number = None
 
     def __init__(self, event_number="29", *args, **kwargs):
+        if not ludumscrape.settings.ENABLE_THE_SCRAPER_I_ACTUALLY_DO_NEED_TO_USE_IT:
+            print "!!!!!!!!!!!! You must enable the spider in settings.py."
+            self.start_urls = []
+            return
         self.event_number = event_number
         self.start_urls = ['http://www.ludumdare.com/compo/ludum-dare-%s/?action=preview&etype=' % event_number]
         self.rules = [Rule(SgmlLinkExtractor(allow=['ludum-dare-%s\/\?action=preview\&q=\&etype=\&start=\d+' 
