@@ -61,6 +61,7 @@ options = docopt(__doc__, argv=None, help=True, version=sys.argv[0] + " " + __ve
 print(sys.argv[0] + " version " + __version__)
 print("Running with options:")
 print(options)
+print("\n\n----")
 print()
 
 trained_filename = options["--trained"]
