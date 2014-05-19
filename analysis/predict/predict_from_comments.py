@@ -36,16 +36,16 @@ Options:
                                 Audio, Innovation [default: Overall]
 
 Example:
-  ./predict_from_comments.py train --pos-tags=J,R --classifier=SVM \
-                                   --svm-kernel=LINEAR --top-features 200 \
-                                   --rating-category=Graphics \
-                                   --predict=rating_class \
+  ./predict_from_comments.py train --pos-tags=J,R --classifier=SVM \\
+                                   --svm-kernel=LINEAR --top-features 200 \\
+                                   --rating-category=Graphics \\
+                                   --predict=rating_class \\
                                    ../../results/results_ld*.json
 
-  ./predict_from_comments.py predict --trained=trained.pickle.gz  \
-                                     --pos-tags=J,R \
-                                     --rating-category=Graphics \
-                                     --predict=rating_class \
+  ./predict_from_comments.py predict --trained=trained.pickle.gz  \\
+                                     --pos-tags=J,R \\
+                                     --rating-category=Graphics \\
+                                     --predict=rating_class \\
                                      ../../results/results_ld30.json
 """
 from __future__ import print_function
