@@ -48,6 +48,8 @@ Example:
                                      --predict=rating_class \
                                      ../../results/results_ld30.json
 """
+from __future__ import print_function
+
 __version__ = "0.1"
 
 import sys
@@ -118,10 +120,10 @@ percentile_rank_class_cutoff = 10  # 10 means "In top 10th percentile ?"
 
 #nltk_tagger = NLTKTagger()
 
-print sys.argv[0] + " version " + __version__
-print "Running with options:"
-print options
-print
+print(sys.argv[0] + " version " + __version__)
+print("Running with options:")
+print(options)
+print()
 
 
 def discard_words_without_tag_of_interest(text, tag_prefixes=tag_prefixes):
@@ -168,7 +170,7 @@ for entry in data:
 
     percentile_rank = (float(rank) / float(worst_ranking)) * 100.0
     percentile_rank_class = (percentile_rank <= percentile_rank_class_cutoff)
-    #print rank, percentile_rank, percentile_rank_class
+    #print(rank, percentile_rank, percentile_rank_class)
 
     # a value of one of the above is assigned as the property to predict
     output_vector = vars()[predict]
@@ -190,7 +192,7 @@ for entry in data:
 
     all_entry_comment_text_filtered = " ".join(entry_comments)
 
-    #print all_entry_comment_text_filtered
+    #print(all_entry_comment_text_filtered)
     # document = all comments for one game entry (seems to work better)
     vectors.append(Document(all_entry_comment_text_filtered,
                             name="%s\t%s" % (author, url),
@@ -200,7 +202,7 @@ for entry in data:
 if use_feature_selection:
     vectors = Model(documents=vectors, weight=pattern.vector.TFIDF)
     vectors = vectors.filter(features=vectors.feature_selection(top=select_top_n_features))
-    #print vectors.vectors
+    #print(vectors.vectors)
 
 if options["train"]:
     if classifier_type == "SVM":
@@ -210,32 +212,32 @@ if options["train"]:
     else:
         classifier = getattr(pattern.vector, classifier_type)(train=vectors)
 
-    print "Classes: " + repr(classifier.classes)
+    print("Classes: " + repr(classifier.classes))
 
     #performance = kfoldcv(NB, vectors, folds=n_fold)
     performance = kfoldcv(type(classifier), vectors, folds=n_fold)
-    print "Accuracy: %.3f\n" \
+    print("Accuracy: %.3f\n" \
           "Precision: %.3f\n" \
           "Recall: %.3f\n" \
           "F1: %.3f\n" \
-          "Stddev:%.3f" % performance
-    print
-    print "Confusion matrx:"
-    print classifier.confusion_matrix(vectors).table
+          "Stddev:%.3f" % performance)
+    print()
+    print("Confusion matrx:")
+    print(classifier.confusion_matrix(vectors).table)
 
     classifier.save(trained_filename)
 elif options["predict"]:
     classifier = Classifier.load(trained_filename)
     for v in vectors:
-        print "%s\t%s" % (v.name, repr(classifier.classify(v)))
+        print("%s\t%s" % (v.name, repr(classifier.classify(v))))
 
 """
-print "\n\n----"
+print("\n\n----")
 from example_game_comments import example_game_comments
 
 example_game_comments_filtered = " ".join(discard_words_without_tag_of_interest_textblob(example_game_comments))
-print "Example comment words: "
-print example_game_comments_filtered
-print
-print "Example prediction: " + repr(classifier.classify(Document(example_game_comments_filtered)))
+print("Example comment words: ")
+print(example_game_comments_filtered)
+print()
+print("Example prediction: " + repr(classifier.classify(Document(example_game_comments_filtered))))
 """
