@@ -4,6 +4,7 @@ class GameItem(Item):
     url = Field()
     title = Field()
     author = Field()
+    uid = Field()
     entry_type = Field()
     description = Field()
     downloads = Field()

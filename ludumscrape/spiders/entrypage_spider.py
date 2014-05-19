@@ -31,6 +31,7 @@ class LudumdareSpider(CrawlSpider):
         title_author = sel.xpath(base_xpath + "/h3/text()").extract()[0]
         entry['title'] = title_author.split("-")[0].strip()
         entry['author'] = title_author.split("-")[1].strip()
+        entry['uid'] = entry['url'].split("&uid=")[1].strip()
         entry['entry_type'] = sel.xpath(base_xpath + "/h3/i/text()").extract()
         description = sel.xpath(base_xpath + "/p[@class='links']/following::p[1]/text()").extract()
         description = self.strip_whitespace(description)
