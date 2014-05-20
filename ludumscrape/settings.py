@@ -6,6 +6,11 @@
 #     http://doc.scrapy.org/en/latest/topics/settings.html
 #
 
+# You probably don't need to run this !
+# There are data files from past LD scraping runs in the ./results directory.
+# Save yourself the time and bandwidth, and be nice to the Ludum Dare site. 
+ENABLE_THE_SCRAPER_I_ACTUALLY_DO_NEED_TO_USE_IT = False
+
 BOT_NAME = 'ludumscrape'
 
 SPIDER_MODULES = ['ludumscrape.spiders']
