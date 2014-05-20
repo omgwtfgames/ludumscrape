@@ -34,8 +34,11 @@ class LudumdareSpider(CrawlSpider):
         entry = GameItem()
         entry['url'] = response.url
         title_author = sel.xpath(base_xpath + "/h3/text()").extract()[0]
-        entry['title'] = title_author.split("-")[0].strip()
-        entry['author'] = title_author.split("-")[1].strip()
+        # parsing title and author look more complex than they might otherwise be since
+        # they need to deal with titles containing spaced hyphens, eg:
+        # "Zems Online CCG - Beneath the Sea Edition! - Exeneva - "
+        entry['title'] = ''.join(title_author.split(" - ")[:-2]).strip()
+        entry['author'] = title_author.split(" - ")[-2].strip()
         entry['uid'] = entry['url'].split("&uid=")[1].strip()
         entry['entry_type'] = sel.xpath(base_xpath + "/h3/i/text()").extract()
         description = sel.xpath(base_xpath + "/p[@class='links']/following::p[1]/text()").extract()
