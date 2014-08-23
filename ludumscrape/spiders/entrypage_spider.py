@@ -48,7 +48,10 @@ class LudumdareSpider(CrawlSpider):
         # for link text to zip together with urls: 
         download_platforms = sel.xpath(base_xpath + "/p[@class='links']/a[@href]/text()").extract()
         download_urls = sel.xpath(base_xpath + "/p[@class='links']/a/@href").extract()
-        entry['downloads'] = dict(zip(download_platforms, download_urls))       
+        entry['downloads'] = dict(zip(download_platforms, download_urls))
+        # TODO: we should capture ahref links on images here too and grab
+        # any full size versions. Currently we only get the feature image and
+        # the thumbnails
         entry['image_urls'] = sel.xpath(base_xpath + "/table//*/img/@src").extract()
         
         #rankings = sel.xpath(base_xpath + "/table[2]/tr/td[1]/text()").extract()
@@ -64,6 +67,8 @@ class LudumdareSpider(CrawlSpider):
             rankings[i] = int(r)
         sections = sel.xpath(base_xpath + "/table[2]/tr/td[2]/text()").extract()
         scores = sel.xpath(base_xpath + "/table[2]/tr/td[3]/text()").extract()
+        # TODO: we should normalize rating category names between compo have
+        # jam (eg, "Overall" instead of "Overall(Jam)"
         entry['ratings'] = dict(zip(sections, zip(scores, rankings)))
         
         if (int(self.event_number) < 18):
