@@ -40,7 +40,12 @@ class LudumdareSpider(CrawlSpider):
         entry['title'] = ''.join(title_author.split(" - ")[:-2]).strip()
         entry['author'] = title_author.split(" - ")[-2].strip()
         entry['uid'] = entry['url'].split("&uid=")[1].strip()
-        entry['entry_type'] = sel.xpath(base_xpath + "/h3/i/text()").extract()
+        entry['entry_type'] = sel.xpath(base_xpath + "/h3/i/text()").extract()[0]
+        # normalize entry_type to "compo" or "jam"
+        if "comp" in entry['entry_type'].lower():
+            entry['entry_type'] = "compo"
+        if "jam" in entry['entry_type'].lower():
+            entry['entry_type'] = "jam"
         description = sel.xpath(base_xpath + "/p[@class='links']/following::p[1]/text()").extract()
         description = self.strip_whitespace(description)
         description = string.join(description, '\n')
@@ -49,11 +54,12 @@ class LudumdareSpider(CrawlSpider):
         download_platforms = sel.xpath(base_xpath + "/p[@class='links']/a[@href]/text()").extract()
         download_urls = sel.xpath(base_xpath + "/p[@class='links']/a/@href").extract()
         entry['downloads'] = dict(zip(download_platforms, download_urls))
-        # TODO: we should capture ahref links on images here too and grab
-        # any full size versions. Currently we only get the feature image and
+
         # the thumbnails
-        entry['image_urls'] = sel.xpath(base_xpath + "/table//*/img/@src").extract()
-        
+        entry['image_urls'] = sel.xpath(base_xpath + "/table[1]//*/img/@src").extract()
+        # the full size screenshots
+        entry['image_urls'] += sel.xpath(base_xpath + "/table[1]//*/a/@href").extract()
+
         #rankings = sel.xpath(base_xpath + "/table[2]/tr/td[1]/text()").extract()
         rankings = sel.xpath(base_xpath + "/table[2]/tr/td[1]/text() | " + 
                              base_xpath + "/table[2]/tr/td[1]/img/@src").extract()
@@ -66,9 +72,10 @@ class LudumdareSpider(CrawlSpider):
                     break
             rankings[i] = int(r)
         sections = sel.xpath(base_xpath + "/table[2]/tr/td[2]/text()").extract()
+        # normalize sections - change "Overall(Jam)" to "overall"
+        sections = map(lambda s: s.lower().replace("(jam)", ""), sections)
+
         scores = sel.xpath(base_xpath + "/table[2]/tr/td[3]/text()").extract()
-        # TODO: we should normalize rating category names between compo have
-        # jam (eg, "Overall" instead of "Overall(Jam)"
         entry['ratings'] = dict(zip(sections, zip(scores, rankings)))
         
         if (int(self.event_number) < 18):
